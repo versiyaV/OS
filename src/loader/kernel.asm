@@ -99,14 +99,15 @@ InitPIC:
 KernelEntry:
     ;set stack pointer to main function kernel
     ;call kernel C main
-    ;xor ax,ax
-    ;mov ss,ax
+    xor ax,ax
+    mov ss,ax
     mov rsp,0xffff800000200000
     call KMain
     ;after load kernel main - init interrupt - start interrupt routine
     ;sti
 
 End:
+    sti
     hlt
     jmp End
 

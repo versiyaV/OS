@@ -29,6 +29,7 @@ global load_idt
 global load_cr3
 global pstart
 global read_cr2
+global read_cr3
 global swap
 global TrapReturn
 global in_byte
@@ -200,6 +201,10 @@ load_cr3:
 
 read_cr2:
     mov rax,cr2
+    ret
+
+read_cr3:
+    mov rax,cr3
     ret
 
 pstart:

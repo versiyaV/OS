@@ -50,7 +50,6 @@ struct ProcessControl {
 #define PROC_KILLED 5
 
 void init_process(void);
-void launch(void);
 void pstart(struct TrapFrame *tf);
 void yield(void);
 void swap(uint64_t *prev, uint64_t next);

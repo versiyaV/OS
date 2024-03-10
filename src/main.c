@@ -12,5 +12,4 @@ void KMain()
     init_kvm();
     init_system_call();
     init_process();
-    launch();
 }
