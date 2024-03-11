@@ -15,43 +15,35 @@ extern char end;
 
 void init_memory(void)
 {
-    int32_t count = *(int32_t*)0x9000;
-    total_mem = 0;
-    struct E820 *mem_map = (struct E820*)0x9008;	
+    int32_t count = *(int32_t*)0x20000;
+    struct E820 *mem_map = (struct E820*)0x20008;	
     int free_region_count = 0;
 
     ASSERT(count <= 50);
 
-	for(int32_t i = 0; i < count; i++) 
-    {        
-        if(mem_map[i].type == 1) 
-        {
+	for(int32_t i = 0; i < count; i++) {        
+        if(mem_map[i].type == 1) {			
             free_mem_region[free_region_count].address = mem_map[i].address;
             free_mem_region[free_region_count].length = mem_map[i].length;
             total_mem += mem_map[i].length;
             free_region_count++;
         }
-        
-        printk("%x  %uKB  %u\n", mem_map[i].address, mem_map[i].length/1024, (uint64_t)mem_map[i].type);
+        printk("%x  %uKB  %u\n",mem_map[i].address,mem_map[i].length/1024,(uint64_t)mem_map[i].type);
 	}
 
-    for (int i = 0; i < free_region_count; i++) 
-    {                  
+    for (int i = 0; i < free_region_count; i++) {                  
         uint64_t vstart = P2V(free_mem_region[i].address);
         uint64_t vend = vstart + free_mem_region[i].length;
 
-        if (vstart > (uint64_t)&end) 
-        {
+        if (vstart > (uint64_t)&end) {
             free_region(vstart, vend);
         } 
-        else if (vend > (uint64_t)&end) 
-        {
+        else if (vend > (uint64_t)&end) {
             free_region((uint64_t)&end, vend);
         }       
     }
-
-    memory_end = (uint64_t)free_memory.next+PAGE_SIZE;
-    printk("%x\n",memory_end);
+    
+    memory_end = (uint64_t)free_memory.next + PAGE_SIZE;   
 }
 
 uint64_t get_total_memory(void)
@@ -61,10 +53,8 @@ uint64_t get_total_memory(void)
 
 static void free_region(uint64_t v, uint64_t e)
 {
-    for (uint64_t start = PA_UP(v); start+PAGE_SIZE <= e; start += PAGE_SIZE) 
-    {        
-        if (start+PAGE_SIZE <= 0xffff800040000000) 
-        {            
+    for (uint64_t start = PA_UP(v); start+PAGE_SIZE <= e; start += PAGE_SIZE) {        
+        if (start+PAGE_SIZE <= 0xffff800030000000) {            
            kfree(start);
         }
     }
@@ -73,8 +63,8 @@ static void free_region(uint64_t v, uint64_t e)
 void kfree(uint64_t v)
 {
     ASSERT(v % PAGE_SIZE == 0);
-    ASSERT(v >= (uint64_t)&end);
-    ASSERT(v + PAGE_SIZE <= 0xffff800040000000);
+    ASSERT(v >= (uint64_t) & end);
+    ASSERT(v+PAGE_SIZE <= 0xffff800030000000);
 
     struct Page *page_address = (struct Page*)v;
     page_address->next = free_memory.next;
@@ -85,11 +75,10 @@ void* kalloc(void)
 {
     struct Page *page_address = free_memory.next;
 
-    if (page_address != NULL) 
-    {
+    if (page_address != NULL) {
         ASSERT((uint64_t)page_address % PAGE_SIZE == 0);
         ASSERT((uint64_t)page_address >= (uint64_t)&end);
-        ASSERT((uint64_t)page_address+PAGE_SIZE <= 0xffff800040000000);
+        ASSERT((uint64_t)page_address+PAGE_SIZE <= 0xffff800030000000);
 
         free_memory.next = page_address->next;            
     }
@@ -179,11 +168,9 @@ uint64_t setup_kvm(void)
 {
     uint64_t page_map = (uint64_t)kalloc();
 
-    if (page_map != 0) 
-    {
+    if (page_map != 0) {
         memset((void*)page_map, 0, PAGE_SIZE);        
-        if (!map_pages(page_map, KERNEL_BASE, memory_end, V2P(KERNEL_BASE), PTE_P|PTE_W)) 
-        {
+        if (!map_pages(page_map, KERNEL_BASE, P2V(0x40000000), V2P(KERNEL_BASE), PTE_P|PTE_W)) {
             free_vm(page_map);
             page_map = 0;
         }
@@ -196,7 +183,6 @@ void init_kvm(void)
     uint64_t page_map = setup_kvm();
     ASSERT(page_map != 0);
     switch_vm(page_map);
-    printk("memory manager is working now\n");
 }
 
 bool setup_uvm(uint64_t map, uint64_t start, int size)
@@ -204,16 +190,13 @@ bool setup_uvm(uint64_t map, uint64_t start, int size)
     bool status = false;
     void *page = kalloc();
 
-    if (page != NULL) 
-    {
+    if (page != NULL) {
         memset(page, 0, PAGE_SIZE);
         status = map_pages(map, 0x400000, 0x400000+PAGE_SIZE, V2P(page), PTE_P|PTE_W|PTE_U);
-        if (status == true) 
-        {
+        if (status == true) {
             memcpy(page, (void*)start, size);
         }
-        else 
-        {
+        else {
             kfree((uint64_t)page);
             free_vm(map);
         }
@@ -232,11 +215,9 @@ void free_pages(uint64_t map, uint64_t vstart, uint64_t vend)
     do {
         PD pd = find_pdpt_entry(map, vstart, 0, 0);
 
-        if (pd != NULL) 
-        {
+        if (pd != NULL) {
             index = (vstart >> 21) & 0x1FF;
-            if (pd[index] & PTE_P) 
-            {        
+            if (pd[index] & PTE_P) {        
                 kfree(P2V(PTE_ADDR(pd[index])));
                 pd[index] = 0;
             }
@@ -250,16 +231,12 @@ static void free_pdt(uint64_t map)
 {
     PDPTR *map_entry = (PDPTR*)map;
 
-    for (int i = 0; i < 512; i++) 
-    {
-        if ((uint64_t)map_entry[i] & PTE_P) 
-        {            
+    for (int i = 0; i < 512; i++) {
+        if ((uint64_t)map_entry[i] & PTE_P) {            
             PD *pdptr = (PD*)P2V(PDE_ADDR(map_entry[i]));
             
-            for (int j = 0; j < 512; j++) 
-            {
-                if ((uint64_t)pdptr[j] & PTE_P) 
-                {
+            for (int j = 0; j < 512; j++) {
+                if ((uint64_t)pdptr[j] & PTE_P) {
                     kfree(P2V(PDE_ADDR(pdptr[j])));
                     pdptr[j] = 0;
                 }
@@ -272,10 +249,8 @@ static void free_pdpt(uint64_t map)
 {
     PDPTR *map_entry = (PDPTR*)map;
 
-    for (int i = 0; i < 512; i++) 
-    {
-        if ((uint64_t)map_entry[i] & PTE_P) 
-        {          
+    for (int i = 0; i < 512; i++) {
+        if ((uint64_t)map_entry[i] & PTE_P) {          
             kfree(P2V(PDE_ADDR(map_entry[i])));
             map_entry[i] = 0;
         }

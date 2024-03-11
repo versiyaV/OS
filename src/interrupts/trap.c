@@ -1,8 +1,8 @@
 #include "trap.h"
 #include "../lib/print.h"
+#include "../lib/debug.h"
 #include "../processes/syscall.h"
 #include "../processes/process.h"
-#include "../lib/debug.h"
 #include "../drivers/keyboard/keyboard.h"
 
 static struct IdtPtr idt_pointer;
@@ -68,10 +68,12 @@ void handler(struct TrapFrame *tf)
             timer_handler();   
             eoi();
             break;
-        case 33:
-            keyboard_handler();
+
+        case 33:  
+            keyboard_handler();   
             eoi();
             break;
+            
         case 39:
             isr_value = read_isr();
             if ((isr_value&(1<<7)) != 0) {
@@ -88,7 +90,7 @@ void handler(struct TrapFrame *tf)
                 printk("Exception is %d\n", tf->trapno);
                 exit();
             }
-            else {                                                                                                        
+            else {
                 while (1) { }
             }
     }

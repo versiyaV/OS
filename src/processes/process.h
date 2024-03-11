@@ -3,12 +3,14 @@
 
 #include "../interrupts/trap.h"
 #include "../lib/lib.h"
+#include "../filesystem/file.h"
 
 struct Process {
 	struct List *next;
     int pid;
 	int state;
 	int wait;
+	struct FileDesc *file[100];
 	uint64_t context;
 	uint64_t page_map;	
 	uint64_t stack;
@@ -50,7 +52,7 @@ struct ProcessControl {
 #define PROC_KILLED 5
 
 void init_process(void);
-void pstart(struct TrapFrame *tf);
+struct ProcessControl* get_pc(void);
 void yield(void);
 void swap(uint64_t *prev, uint64_t next);
 void sleep(int wait);
