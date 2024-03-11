@@ -7,7 +7,7 @@
 #include "../filesystem/file.h"
 #include "stddef.h"
 
-static SYSTEMCALL system_calls[10];
+static SYSTEMCALL system_calls[20];
 
 static int sys_write(int64_t *argptr)
 {    
@@ -40,7 +40,7 @@ static int sys_exit(int64_t *argptr)
 
 static int sys_wait(int64_t *argptr)
 {
-    wait();
+    wait(argptr[0]);
     return 0;
 }
 
@@ -80,6 +80,11 @@ static int sys_get_file_size(int64_t *argptr)
     return get_file_size(pc->current_process, argptr[0]);
 }
 
+static int sys_fork(int64_t *argptr)
+{
+    return fork();
+}
+
 void init_system_call(void)
 {
     system_calls[0] = sys_write;
@@ -92,6 +97,7 @@ void init_system_call(void)
     system_calls[7] = sys_read_file;  
     system_calls[8] = sys_get_file_size;
     system_calls[9] = sys_close_file; 
+    system_calls[10] = sys_fork; 
 }
 
 void system_call(struct TrapFrame *tf)
@@ -100,7 +106,7 @@ void system_call(struct TrapFrame *tf)
     int64_t param_count = tf->rdi;
     int64_t *argptr = (int64_t*)tf->rsi;
 
-    if (param_count < 0 || i > 9 || i < 0) { 
+    if (param_count < 0 || i > 10 || i < 0) { 
         tf->rax = -1;
         return;
     }

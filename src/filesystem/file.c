@@ -208,6 +208,7 @@ int open_file(struct Process *proc, char *path_name)
     
     memset(&file_desc_table[file_desc_index], 0, sizeof(struct FileDesc));
     file_desc_table[file_desc_index].fcb = &fcb_table[fcb_index];
+    file_desc_table[file_desc_index].count = 1;
     proc->file[fd] = &file_desc_table[file_desc_index];
     
     return fd;
@@ -274,8 +275,13 @@ int read_file(struct Process *proc, int fd, void *buffer, uint32_t size)
 void close_file(struct Process *proc, int fd)
 {
     put_fcb(proc->file[fd]->fcb);
+    proc->file[fd]->count--;
 
-    proc->file[fd]->fcb = NULL;
+    if(proc->file[fd]->count == 0)
+    {
+        proc->file[fd]->fcb = NULL;
+    }
+
     proc->file[fd] = NULL;
 }
 
