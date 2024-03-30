@@ -7,12 +7,12 @@ int main(void)
     pid = fork();
     if (pid == 0) 
     {
-        printf("this is new process\n");
+        exec("TEST.BIN");
     }
     else 
     {
-        printf("this is the current process\n");
         waitu(pid);
+        printf("test process exit\n");
     }
     
     return 0;

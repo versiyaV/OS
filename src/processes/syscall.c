@@ -85,6 +85,13 @@ static int sys_fork(int64_t *argptr)
     return fork();
 }
 
+static int sys_exec(int64_t *argptr)
+{
+    struct ProcessControl *pc = get_pc();
+    struct Process *process = pc->current_process;
+    return exec(process, (char*)argptr[0]);
+}
+
 void init_system_call(void)
 {
     system_calls[0] = sys_write;
@@ -98,6 +105,7 @@ void init_system_call(void)
     system_calls[8] = sys_get_file_size;
     system_calls[9] = sys_close_file; 
     system_calls[10] = sys_fork; 
+    system_calls[11] = sys_exec;
 }
 
 void system_call(struct TrapFrame *tf)
@@ -106,7 +114,7 @@ void system_call(struct TrapFrame *tf)
     int64_t param_count = tf->rdi;
     int64_t *argptr = (int64_t*)tf->rsi;
 
-    if (param_count < 0 || i > 10 || i < 0) { 
+    if (param_count < 0 || i > 11 || i < 0) { 
         tf->rax = -1;
         return;
     }

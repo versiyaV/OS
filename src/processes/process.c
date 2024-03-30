@@ -304,3 +304,37 @@ int fork(void)
 
     return process->pid;
 }
+
+
+int exec(struct Process *process, char* name)
+{
+    int fd;
+    uint32_t size;
+    
+    fd = open_file(process, name);
+
+    if (fd == -1) 
+    {
+        exit();
+    }
+
+    memset((void*)0x400000, 0, PAGE_SIZE);
+    size = get_file_size(process, fd);
+    size = read_file(process, fd, (void*)0x400000, size);
+    
+    if (size == 0xffffffff) 
+    {
+        exit();
+    }
+
+    close_file(process, fd);
+
+    memset(process->tf, 0, sizeof(struct TrapFrame));
+    process->tf->cs = 0x10|3;
+    process->tf->rip = 0x400000;
+    process->tf->ss = 0x18|3;
+    process->tf->rsp = 0x400000 + PAGE_SIZE;
+    process->tf->rflags = 0x202;
+
+    return 0;
+}
