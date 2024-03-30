@@ -15,6 +15,7 @@ global get_file_size
 global close_file
 global fork
 global exec
+global read_root_directory
 
 ; libc function
 memset:
@@ -180,6 +181,16 @@ fork:
 exec:
     sub rsp,8
     mov eax,11
+    mov [rsp],rdi
+    mov rdi,1
+    mov rsi,rsp
+    int 0x80
+    add rsp,8
+    ret
+
+read_root_directory:
+    sub rsp,8
+    mov eax,12
     mov [rsp],rdi
     mov rdi,1
     mov rsi,rsp
