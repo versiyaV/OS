@@ -1,7 +1,7 @@
 #include "file.h"
 #include "lib.h"
-#include "../../lib/print.h"
-#include "../../lib/debug.h"
+#include "print.h"
+#include "debug.h"
 #include "stdbool.h"
 
 
@@ -192,30 +192,23 @@ int load_file(char *path, uint64_t addr)
     int ret = -1;
     
     index = search_file(path);
-    printk("here\n");
 
     if (index != 0xffffffff) {
-        printk("here\n");
+        
         dir_entry = get_root_directory();
         file_size = dir_entry[index].file_size;
         cluster_index = dir_entry[index].cluster_index;
         
         if (read_file(cluster_index, (void*)addr, file_size) == file_size) {
-            printk("here\n");
             ret = 0;
         }
     }
-    
+
     return ret;
 }
 
 void init_fs(void)
 {
     uint8_t *p = (uint8_t*)get_fs_bpb();
-    
-    if (p[0x1fe] != 0x55 || p[0x1ff] != 0xaa) {
-        printk("invalid signature\n");
-        ASSERT(0);
-    }
 }
 

@@ -1,6 +1,6 @@
-#include "../lib/print.h"
-#include "../filesystem/file.h"
-#include "../lib/debug.h"
+#include "print.h"
+#include "file.h"
+#include "debug.h"
 
 void EMain(void)
 {

@@ -259,7 +259,7 @@ LEnd:
     hlt
     jmp LEnd
 
-Message:    db "We have an error in loader"
+Message:    db "We have an error in boot process"
 MessageLen: equ $-Message
 
 ReadPacket: times 16 db 0
