@@ -22,8 +22,8 @@ kernel: buildObject
 	mv kernel.bin bin/
 	rm -rf *.bin *.o kernel
 
-loader: src/loader
-	cd loader && make
+loader: 
+	cd src/loader && make
 
 shell: kernel
 	cd shell && make

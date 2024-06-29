@@ -16,5 +16,5 @@ loader: buildObject
 	ld $(LDFLAGS) -o entry entry.o main.o liba.o print.o debug.o file.o
 	objcopy -O binary entry entry.bin
 	dd if=entry.bin >> loader.bin
-	dd if=loader.bin of=../bin/os.img bs=512 count=15 seek=1 conv=notrunc
-	rm -rf *.o *.bin entry 
+	dd if=loader.bin of=../../bin/*.img bs=512 count=15 seek=1 conv=notrunc
+	rm -rf *.o *.bin entry
